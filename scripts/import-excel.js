@@ -25,9 +25,26 @@ if (!excelPath) {
 
 fs.mkdirSync(databaseDir, { recursive: true });
 
-if (fs.existsSync(databasePath)) {
-  fs.unlinkSync(databasePath);
-}
+const removeExistingDatabase = () => {
+  if (!fs.existsSync(databasePath)) {
+    return;
+  }
+
+  try {
+    fs.unlinkSync(databasePath);
+  } catch (error) {
+    if (["EBUSY", "EPERM"].includes(error.code)) {
+      console.error("Database SQLite gia' in uso.");
+      console.error("Chiudere il backend o altri programmi che stanno usando il database.");
+      console.error(`File bloccato: ${databasePath}`);
+      process.exit(1);
+    }
+
+    throw error;
+  }
+};
+
+removeExistingDatabase();
 
 const workbook = xlsx.readFile(excelPath, {
   cellDates: false,

@@ -21,8 +21,8 @@ const emptyFilters = {
 const channelOptions = [
   "Database DEM",
   "LinkedIn",
-  "On-site stand",
-  "On-site simposio",
+  "On-site (stand)",
+  "On-site (simposio)",
 ];
 
 const dimensionOptions = [
