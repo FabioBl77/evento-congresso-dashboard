@@ -1,12 +1,15 @@
 import express from "express";
 import cors from "cors";
 import { closeDatabase, getDatabase } from "./database.js";
+import participantsRoutes from "./routes/participants.routes.js";
 
 const app = express();
 const port = Number(process.env.PORT) || 3000;
 
 app.use(cors());
 app.use(express.json());
+
+app.use("/api/participants", participantsRoutes);
 
 /**
  * Endpoint tecnico minimale.
