@@ -76,6 +76,33 @@ button:disabled {
   background: #f9fafb;
 }
 
+.main-nav {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #d9e0e7;
+}
+
+.nav-button {
+  min-height: 44px;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  padding: 0 16px;
+  color: #4a5562;
+  background: transparent;
+  font-weight: 700;
+}
+
+.nav-button:hover {
+  color: #20252b;
+  background: #eef2f5;
+}
+
+.nav-button-active {
+  border-bottom-color: #28536b;
+  color: #20252b;
+}
+
 .toolbar,
 .table-toolbar,
 .panel-control {
@@ -125,6 +152,15 @@ button:focus {
   padding: 12px 14px;
   color: #842727;
   background: #fff2f2;
+}
+
+.empty-box {
+  margin-bottom: 20px;
+  border: 1px solid #d9e0e7;
+  border-radius: 8px;
+  padding: 16px;
+  color: #4a5562;
+  background: #ffffff;
 }
 
 .kpi-grid {
@@ -290,10 +326,25 @@ tbody tr:last-child td {
   }
 
   .page-header,
+  .main-nav,
   .toolbar,
   .table-toolbar {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .main-nav {
+    border-bottom: 0;
+  }
+
+  .nav-button {
+    border: 1px solid #d9e0e7;
+    border-radius: 6px;
+    background: #ffffff;
+  }
+
+  .nav-button-active {
+    border-color: #28536b;
   }
 
   .page-header h1 {

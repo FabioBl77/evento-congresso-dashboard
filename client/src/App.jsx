@@ -31,6 +31,11 @@ const dimensionOptions = [
   { value: "region", label: "Regione" },
 ];
 
+const navItems = [
+  { id: "dashboard", label: "Dashboard" },
+  { id: "participants", label: "Partecipanti" },
+];
+
 const numberFormatter = new Intl.NumberFormat("it-IT");
 
 const formatNumber = (value) => numberFormatter.format(value || 0);
@@ -46,6 +51,7 @@ const formatPercentage = (value, total) => {
 const normalizeChartName = (value) => value || "Non indicato";
 
 function App() {
+  const [activeSection, setActiveSection] = useState("dashboard");
   const [filters, setFilters] = useState(emptyFilters);
   const [dimension, setDimension] = useState("engagementChannel");
   const [search, setSearch] = useState("");
@@ -155,6 +161,19 @@ function App() {
         </button>
       </header>
 
+      <nav className="main-nav" aria-label="Sezioni dashboard">
+        {navItems.map((item) => (
+          <button
+            key={item.id}
+            className={activeSection === item.id ? "nav-button nav-button-active" : "nav-button"}
+            type="button"
+            onClick={() => setActiveSection(item.id)}
+          >
+            {item.label}
+          </button>
+        ))}
+      </nav>
+
       <section className="toolbar" aria-label="Filtri dashboard">
         <label>
           Stakeholder
@@ -194,198 +213,148 @@ function App() {
 
       {error ? <div className="error-box">{error}</div> : null}
 
-      <section className="kpi-grid" aria-label="Indicatori principali">
-        <KpiCard
-          label="Partecipanti"
-          value={dashboardData.summary?.participants}
-          detail="Record importati nel database"
+      {activeSection === "dashboard" ? (
+        <>
+          <section className="kpi-grid" aria-label="Indicatori principali">
+            <KpiCard
+              label="Partecipanti"
+              value={dashboardData.summary?.participants}
+              detail="Record importati nel database"
+            />
+            <KpiCard
+              label="DEM inviate"
+              value={dashboardData.summary?.demSent}
+              detail={formatPercentage(
+                dashboardData.summary?.demSent,
+                dashboardData.summary?.participants,
+              )}
+            />
+            <KpiCard
+              label="DEM aperte"
+              value={dashboardData.summary?.demOpened}
+              detail={formatPercentage(
+                dashboardData.summary?.demOpened,
+                dashboardData.summary?.demSent,
+              )}
+            />
+            <KpiCard
+              label="Visite stand"
+              value={dashboardData.summary?.standVisits}
+              detail={formatPercentage(
+                dashboardData.summary?.standVisits,
+                dashboardData.summary?.participants,
+              )}
+            />
+            <KpiCard
+              label="Accessi sala VIP"
+              value={dashboardData.summary?.vipAccesses}
+              detail={formatPercentage(
+                dashboardData.summary?.vipAccesses,
+                dashboardData.summary?.participants,
+              )}
+            />
+            <KpiCard
+              label="Presenze simposio"
+              value={dashboardData.summary?.symposiumAttendances}
+              detail={formatPercentage(
+                dashboardData.summary?.symposiumAttendances,
+                dashboardData.summary?.participants,
+              )}
+            />
+          </section>
+
+          {!isLoading && dashboardData.summary?.participants === 0 ? (
+            <div className="empty-box">Nessun risultato per i filtri selezionati.</div>
+          ) : null}
+
+          <section className="dashboard-grid">
+            <Panel title="Funnel evento" isLoading={isLoading}>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={dashboardData.funnel} layout="vertical" margin={{ left: 96 }}>
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                  <XAxis type="number" allowDecimals={false} />
+                  <YAxis
+                    dataKey="label"
+                    type="category"
+                    width={140}
+                    tick={{ fontSize: 12 }}
+                  />
+                  <Tooltip formatter={(value) => formatNumber(value)} />
+                  <Bar dataKey="value" fill="#28536b" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </Panel>
+
+            <Panel title="Confronto per dimensione" isLoading={isLoading}>
+              <div className="panel-control">
+                <label>
+                  Dimensione
+                  <select value={dimension} onChange={(event) => setDimension(event.target.value)}>
+                    {dimensionOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <ResponsiveContainer width="100%" height={280}>
+                <BarChart
+                  data={dashboardData.byDimension.map((item) => ({
+                    ...item,
+                    name: normalizeChartName(item.name),
+                  }))}
+                >
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="name" tick={{ fontSize: 11 }} interval={0} height={70} />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip formatter={(value) => formatNumber(value)} />
+                  <Bar dataKey="participants" name="Partecipanti" fill="#466060" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="standVisits" name="Visite stand" fill="#d17a22" radius={[4, 4, 0, 0]} />
+                  <Bar
+                    dataKey="symposiumAttendances"
+                    name="Presenze simposio"
+                    fill="#7c3f58"
+                    radius={[4, 4, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+              <p className="panel-note">Dimensione selezionata: {selectedDimensionLabel}</p>
+            </Panel>
+
+            <Panel title="Andamento giornaliero" isLoading={isLoading}>
+              <ResponsiveContainer width="100%" height={280}>
+                <LineChart data={dashboardData.byDay}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="day" tick={{ fontSize: 12 }} />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip formatter={(value) => formatNumber(value)} />
+                  <Line type="monotone" dataKey="standVisits" name="Visite stand" stroke="#28536b" />
+                  <Line type="monotone" dataKey="vipAccesses" name="Accessi VIP" stroke="#d17a22" />
+                  <Line
+                    type="monotone"
+                    dataKey="symposiumAttendances"
+                    name="Presenze simposio"
+                    stroke="#7c3f58"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </Panel>
+          </section>
+        </>
+      ) : null}
+
+      {activeSection === "participants" ? (
+        <ParticipantsPanel
+          isLoading={isLoading}
+          participants={participants}
+          search={search}
+          onSearchChange={handleSearchChange}
+          onPageChange={setPage}
         />
-        <KpiCard
-          label="DEM inviate"
-          value={dashboardData.summary?.demSent}
-          detail={formatPercentage(
-            dashboardData.summary?.demSent,
-            dashboardData.summary?.participants,
-          )}
-        />
-        <KpiCard
-          label="DEM aperte"
-          value={dashboardData.summary?.demOpened}
-          detail={formatPercentage(
-            dashboardData.summary?.demOpened,
-            dashboardData.summary?.demSent,
-          )}
-        />
-        <KpiCard
-          label="Visite stand"
-          value={dashboardData.summary?.standVisits}
-          detail={formatPercentage(
-            dashboardData.summary?.standVisits,
-            dashboardData.summary?.participants,
-          )}
-        />
-        <KpiCard
-          label="Accessi sala VIP"
-          value={dashboardData.summary?.vipAccesses}
-          detail={formatPercentage(
-            dashboardData.summary?.vipAccesses,
-            dashboardData.summary?.participants,
-          )}
-        />
-        <KpiCard
-          label="Presenze simposio"
-          value={dashboardData.summary?.symposiumAttendances}
-          detail={formatPercentage(
-            dashboardData.summary?.symposiumAttendances,
-            dashboardData.summary?.participants,
-          )}
-        />
-      </section>
+      ) : null}
 
-      <section className="dashboard-grid">
-        <Panel title="Funnel evento" isLoading={isLoading}>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={dashboardData.funnel} layout="vertical" margin={{ left: 96 }}>
-              <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-              <XAxis type="number" allowDecimals={false} />
-              <YAxis
-                dataKey="label"
-                type="category"
-                width={140}
-                tick={{ fontSize: 12 }}
-              />
-              <Tooltip formatter={(value) => formatNumber(value)} />
-              <Bar dataKey="value" fill="#28536b" radius={[0, 4, 4, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </Panel>
-
-        <Panel title="Confronto per dimensione" isLoading={isLoading}>
-          <div className="panel-control">
-            <label>
-              Dimensione
-              <select value={dimension} onChange={(event) => setDimension(event.target.value)}>
-                {dimensionOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart
-              data={dashboardData.byDimension.map((item) => ({
-                ...item,
-                name: normalizeChartName(item.name),
-              }))}
-            >
-              <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              <XAxis dataKey="name" tick={{ fontSize: 11 }} interval={0} height={70} />
-              <YAxis allowDecimals={false} />
-              <Tooltip formatter={(value) => formatNumber(value)} />
-              <Bar dataKey="participants" name="Partecipanti" fill="#466060" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="standVisits" name="Visite stand" fill="#d17a22" radius={[4, 4, 0, 0]} />
-              <Bar
-                dataKey="symposiumAttendances"
-                name="Presenze simposio"
-                fill="#7c3f58"
-                radius={[4, 4, 0, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-          <p className="panel-note">Dimensione selezionata: {selectedDimensionLabel}</p>
-        </Panel>
-
-        <Panel title="Andamento giornaliero" isLoading={isLoading}>
-          <ResponsiveContainer width="100%" height={280}>
-            <LineChart data={dashboardData.byDay}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="day" tick={{ fontSize: 12 }} />
-              <YAxis allowDecimals={false} />
-              <Tooltip formatter={(value) => formatNumber(value)} />
-              <Line type="monotone" dataKey="standVisits" name="Visite stand" stroke="#28536b" />
-              <Line type="monotone" dataKey="vipAccesses" name="Accessi VIP" stroke="#d17a22" />
-              <Line
-                type="monotone"
-                dataKey="symposiumAttendances"
-                name="Presenze simposio"
-                stroke="#7c3f58"
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </Panel>
-
-        <Panel title="Partecipanti" isLoading={isLoading} wide>
-          <div className="table-toolbar">
-            <label>
-              Cerca
-              <input
-                type="search"
-                value={search}
-                onChange={handleSearchChange}
-                placeholder="Nome, azienda, email"
-              />
-            </label>
-            <p>
-              {formatNumber(participants.pagination.totalItems)} risultati, pagina{" "}
-              {participants.pagination.page} di {participants.pagination.totalPages}
-            </p>
-          </div>
-
-          <div className="table-wrapper">
-            <table>
-              <thead>
-                <tr>
-                  <th>Partecipante</th>
-                  <th>Azienda</th>
-                  <th>Stakeholder</th>
-                  <th>Regione</th>
-                  <th>Canale</th>
-                </tr>
-              </thead>
-              <tbody>
-                {participants.data.map((participant) => (
-                  <tr key={participant.id}>
-                    <td>
-                      <strong>{participant.fullName || "Non indicato"}</strong>
-                      <span>{participant.email || "Email non indicata"}</span>
-                    </td>
-                    <td>{participant.company || "Non indicata"}</td>
-                    <td>{participant.stakeholderType || "Non indicato"}</td>
-                    <td>{participant.region || "Non indicata"}</td>
-                    <td>{participant.engagementChannel || "Non indicato"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="pagination">
-            <button
-              className="secondary-button"
-              type="button"
-              onClick={() => setPage((currentPage) => Math.max(currentPage - 1, 1))}
-              disabled={participants.pagination.page <= 1}
-            >
-              Precedente
-            </button>
-            <button
-              className="secondary-button"
-              type="button"
-              onClick={() =>
-                setPage((currentPage) =>
-                  Math.min(currentPage + 1, participants.pagination.totalPages),
-                )
-              }
-              disabled={participants.pagination.page >= participants.pagination.totalPages}
-            >
-              Successiva
-            </button>
-          </div>
-        </Panel>
-      </section>
     </main>
   );
 }
@@ -397,6 +366,85 @@ function KpiCard({ label, value, detail }) {
       <strong>{formatNumber(value)}</strong>
       <span>{detail}</span>
     </article>
+  );
+}
+
+function ParticipantsPanel({ isLoading, participants, search, onSearchChange, onPageChange }) {
+  const hasParticipants = participants.data.length > 0;
+
+  return (
+    <Panel title="Partecipanti" isLoading={isLoading} wide>
+      <div className="table-toolbar">
+        <label>
+          Cerca
+          <input
+            type="search"
+            value={search}
+            onChange={onSearchChange}
+            placeholder="Nome, azienda, email"
+          />
+        </label>
+        <p>
+          {formatNumber(participants.pagination.totalItems)} risultati, pagina{" "}
+          {participants.pagination.page} di {participants.pagination.totalPages}
+        </p>
+      </div>
+
+      {hasParticipants ? (
+        <div className="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Partecipante</th>
+                <th>Azienda</th>
+                <th>Stakeholder</th>
+                <th>Regione</th>
+                <th>Canale</th>
+              </tr>
+            </thead>
+            <tbody>
+              {participants.data.map((participant) => (
+                <tr key={participant.id}>
+                  <td>
+                    <strong>{participant.fullName || "Non indicato"}</strong>
+                    <span>{participant.email || "Email non indicata"}</span>
+                  </td>
+                  <td>{participant.company || "Non indicata"}</td>
+                  <td>{participant.stakeholderType || "Non indicato"}</td>
+                  <td>{participant.region || "Non indicata"}</td>
+                  <td>{participant.engagementChannel || "Non indicato"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="empty-box">Nessun partecipante trovato con i filtri selezionati.</div>
+      )}
+
+      <div className="pagination">
+        <button
+          className="secondary-button"
+          type="button"
+          onClick={() => onPageChange((currentPage) => Math.max(currentPage - 1, 1))}
+          disabled={participants.pagination.page <= 1}
+        >
+          Precedente
+        </button>
+        <button
+          className="secondary-button"
+          type="button"
+          onClick={() =>
+            onPageChange((currentPage) =>
+              Math.min(currentPage + 1, participants.pagination.totalPages),
+            )
+          }
+          disabled={participants.pagination.page >= participants.pagination.totalPages}
+        >
+          Successiva
+        </button>
+      </div>
+    </Panel>
   );
 }
 
