@@ -27,6 +27,8 @@ La struttura principale del progetto e' questa:
 ```text
 Evento Congresso
   client
+    .dockerignore
+    Dockerfile
     index.html
     package.json
     vite.config.js
@@ -46,12 +48,15 @@ Evento Congresso
     routes
       analytics.routes.js
       participants.routes.js
+  .dockerignore
+  docker-compose.yml
+  Dockerfile
   package.json
   README.md
   .gitignore
 ```
 
-Il file Excel originale e il database generato non sono inclusi nella repository. Questa scelta evita di pubblicare allegati della prova e file generati localmente.
+Il file Excel originale e' incluso nella repository per rendere ripetibile l'avvio del progetto, anche tramite Docker Compose. Il database SQLite generato non e' invece incluso, perche' viene ricreato dallo script di import.
 
 Per eseguire il progetto e' necessario avere localmente il file:
 
@@ -59,15 +64,93 @@ Per eseguire il progetto e' necessario avere localmente il file:
 Dataset Evento Congresso 2025.xlsx
 ```
 
-Il file puo' essere posizionato nella root del progetto oppure in:
+Se si vuole usare un file aggiornato manualmente, puo' essere posizionato nella root del progetto oppure in:
 
 ```text
 data/raw/Dataset Evento Congresso 2025.xlsx
 ```
 
-## Installazione
+## Avvio rapido con Node.js
 
-Dalla root del progetto installo le dipendenze del backend:
+Il modo piu' semplice per avviare il progetto senza Docker e' usare Node.js.
+
+Installo le dipendenze del backend:
+
+```powershell
+npm install
+```
+
+Installo le dipendenze del frontend:
+
+```powershell
+cd client
+npm install
+cd ..
+```
+
+Importo il dataset nel database SQLite:
+
+```powershell
+npm run import
+```
+
+Avvio backend e frontend con un solo comando dalla root:
+
+```powershell
+npm run dev
+```
+
+La dashboard viene esposta su:
+
+```text
+http://127.0.0.1:5173
+```
+
+Il backend viene esposto su:
+
+```text
+http://127.0.0.1:3000
+```
+
+## Avvio con Docker Compose
+
+In alternativa, il progetto puo' essere avviato anche con Docker Compose. Questa modalita' richiede Docker Desktop avviato.
+
+Dalla root del progetto eseguo:
+
+```powershell
+docker compose up --build
+```
+
+Il backend importa automaticamente il file Excel, crea il database SQLite dentro un volume Docker e poi avvia le API. Quando i servizi sono avviati, apro la dashboard nel browser:
+
+```text
+http://127.0.0.1:5173
+```
+
+Il backend resta disponibile su:
+
+```text
+http://127.0.0.1:3000
+```
+
+Per fermare i container:
+
+```powershell
+docker compose down
+```
+
+Per eliminare anche il volume con il database SQLite generato:
+
+```powershell
+docker compose down -v
+```
+
+## Installazione manuale separata
+
+Se preferisco non usare il comando unico `npm run dev`, posso avviare backend e frontend in due terminali separati.
+
+Dalla root del progetto installo le dipendenze:
 
 ```powershell
 npm install
@@ -81,7 +164,7 @@ npm install
 cd ..
 ```
 
-## Import dei dati
+## Import manuale dei dati
 
 Dalla root del progetto eseguo:
 
@@ -113,7 +196,7 @@ node scripts/inspect-database.js
 
 Questo script stampa conteggi e aggregazioni principali, utili per verificare che l'import sia coerente prima di avviare la dashboard.
 
-## Avvio dell'applicazione
+## Avvio manuale separato dell'applicazione
 
 Per usare l'applicazione in locale servono due terminali.
 
@@ -244,6 +327,5 @@ Con piu' tempo aggiungerei:
 
 - test automatici sulle query principali;
 - validazione piu' estesa sul dataset;
-- Docker Compose per rendere l'ambiente ancora piu' riproducibile;
 - filtri piu' granulari nella dashboard;
 - esportazione CSV delle viste aggregate.

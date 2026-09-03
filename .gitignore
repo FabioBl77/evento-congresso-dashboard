@@ -16,7 +16,6 @@ output/
 REGOLE_LAVORO_PROGETTO.md
 TRACCIA_SVILUPPO_INTERNA.md
 Prova Tecnica Developer.docx
-Dataset Evento Congresso 2025.xlsx
 
 data/*.sqlite
 data/*.sqlite-journal

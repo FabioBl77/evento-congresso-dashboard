@@ -1,0 +1,21 @@
+.git
+node_modules
+client/node_modules
+client/dist
+
+data
+tmp
+output
+
+.env
+.env.*
+*.log
+npm-debug.log*
+
+Dataset Evento Congresso 2025.xlsx
+Prova Tecnica Developer.docx
+REGOLE_LAVORO_PROGETTO.md
+TRACCIA_SVILUPPO_INTERNA.md
+
+.DS_Store
+Thumbs.db
