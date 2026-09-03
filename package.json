@@ -1,0 +1,26 @@
+{
+  "name": "evento-congresso-dashboard",
+  "version": "1.0.0",
+  "description": "Dashboard web per analizzare i dati di un evento congresso medico.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "install:all": "npm install && npm install --prefix client",
+    "import": "node scripts/import-excel.js",
+    "server": "node server/index.js",
+    "client": "npm run dev --prefix client",
+    "dev": "concurrently \"npm run server\" \"npm run client\""
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.10.0",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
