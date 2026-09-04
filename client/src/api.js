@@ -54,5 +54,7 @@ export const api = {
 
   getByDay: (filters) => requestJson(`/api/analytics/by-day${buildQueryString(filters)}`),
 
+  getParticipantFilters: () => requestJson("/api/participants/filters"),
+
   getParticipants: (params) => requestJson(`/api/participants${buildQueryString(params)}`),
 };

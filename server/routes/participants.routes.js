@@ -61,6 +61,41 @@ const buildParticipantsWhere = (query) => {
   };
 };
 
+const getDistinctValues = (db, columnName) =>
+  db
+    .prepare(
+      `
+        SELECT DISTINCT ${columnName} AS value
+        FROM participants
+        WHERE ${columnName} IS NOT NULL
+          AND TRIM(${columnName}) <> ''
+        ORDER BY ${columnName}
+      `,
+    )
+    .all()
+    .map((row) => row.value);
+
+/**
+ * Opzioni disponibili per i filtri della dashboard.
+ *
+ * Le ricavo dal database per evitare valori duplicati nel frontend. Se in futuro
+ * il dataset contiene un nuovo stakeholder, una nuova regione o un nuovo canale,
+ * la select React si aggiorna senza modificare il codice.
+ */
+router.get("/filters", (request, response, next) => {
+  try {
+    const db = getDatabase();
+
+    response.json({
+      stakeholderTypes: getDistinctValues(db, "stakeholder_type"),
+      regions: getDistinctValues(db, "region"),
+      engagementChannels: getDistinctValues(db, "engagement_channel"),
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 /**
  * Elenco partecipanti.
  *

@@ -18,12 +18,11 @@ const emptyFilters = {
   engagementChannel: "",
 };
 
-const channelOptions = [
-  "Database DEM",
-  "LinkedIn",
-  "On-site (stand)",
-  "On-site (simposio)",
-];
+const emptyFilterOptions = {
+  stakeholderTypes: [],
+  regions: [],
+  engagementChannels: [],
+};
 
 const dimensionOptions = [
   { value: "engagementChannel", label: "Canale di ingaggio" },
@@ -56,6 +55,7 @@ function App() {
   const [dimension, setDimension] = useState("engagementChannel");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [filterOptions, setFilterOptions] = useState(emptyFilterOptions);
   const [dashboardData, setDashboardData] = useState({
     summary: null,
     funnel: [],
@@ -84,6 +84,30 @@ function App() {
     }),
     [filters, page, search],
   );
+
+  useEffect(() => {
+    let ignoreResult = false;
+
+    const loadFilterOptions = async () => {
+      try {
+        const result = await api.getParticipantFilters();
+
+        if (!ignoreResult) {
+          setFilterOptions(result);
+        }
+      } catch (requestError) {
+        if (!ignoreResult) {
+          setError(requestError.message);
+        }
+      }
+    };
+
+    loadFilterOptions();
+
+    return () => {
+      ignoreResult = true;
+    };
+  }, []);
 
   useEffect(() => {
     let ignoreResult = false;
@@ -180,22 +204,32 @@ function App() {
       <section className="toolbar" aria-label="Filtri dashboard">
         <label>
           Stakeholder
-          <input
-            type="search"
+          <select
             value={filters.stakeholderType}
             onChange={(event) => handleFilterChange("stakeholderType", event.target.value)}
-            placeholder="Es. Medico"
-          />
+          >
+            <option value="">Tutti gli stakeholder</option>
+            {filterOptions.stakeholderTypes.map((stakeholder) => (
+              <option key={stakeholder} value={stakeholder}>
+                {stakeholder}
+              </option>
+            ))}
+          </select>
         </label>
 
         <label>
           Regione
-          <input
-            type="search"
+          <select
             value={filters.region}
             onChange={(event) => handleFilterChange("region", event.target.value)}
-            placeholder="Es. Lombardia"
-          />
+          >
+            <option value="">Tutte le regioni</option>
+            {filterOptions.regions.map((region) => (
+              <option key={region} value={region}>
+                {region}
+              </option>
+            ))}
+          </select>
         </label>
 
         <label>
@@ -205,7 +239,7 @@ function App() {
             onChange={(event) => handleFilterChange("engagementChannel", event.target.value)}
           >
             <option value="">Tutti i canali</option>
-            {channelOptions.map((channel) => (
+            {filterOptions.engagementChannels.map((channel) => (
               <option key={channel} value={channel}>
                 {channel}
               </option>
