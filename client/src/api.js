@@ -41,6 +41,9 @@ export const api = {
 
   getFunnel: (filters) => requestJson(`/api/analytics/funnel${buildQueryString(filters)}`),
 
+  getRelationships: (filters) =>
+    requestJson(`/api/analytics/relationships${buildQueryString(filters)}`),
+
   getByDimension: (dimension, filters) =>
     requestJson(
       `/api/analytics/by-dimension${buildQueryString({

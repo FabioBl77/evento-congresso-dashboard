@@ -133,6 +133,89 @@ router.get("/funnel", (request, response, next) => {
 });
 
 /**
+ * Relazioni tra touchpoint.
+ *
+ * Qui non conto una singola colonna: confronto gruppi di partecipanti che hanno
+ * compiuto una prima azione e verifico quanti arrivano anche all'azione successiva.
+ */
+router.get("/relationships", (request, response, next) => {
+  try {
+    const db = getDatabase();
+    const filters = buildParticipantFilters(request.query);
+
+    const query = db.prepare(`
+      SELECT
+        COUNT(*) AS participants,
+        SUM(CASE WHEN dem_open.value_boolean = 1 THEN 1 ELSE 0 END) AS demOpened,
+        SUM(CASE WHEN stand.value_boolean = 1 THEN 1 ELSE 0 END) AS standVisits,
+        SUM(CASE WHEN dem_open.value_boolean = 1 AND stand.value_boolean = 1 THEN 1 ELSE 0 END)
+          AS demOpenedAndStandVisit,
+        SUM(CASE WHEN vip.value_boolean = 1 THEN 1 ELSE 0 END) AS vipAccesses,
+        SUM(CASE WHEN simposio.value_boolean = 1 THEN 1 ELSE 0 END) AS symposiumAttendances,
+        SUM(CASE WHEN vip.value_boolean = 1 AND simposio.value_boolean = 1 THEN 1 ELSE 0 END)
+          AS vipAndSymposium,
+        SUM(CASE WHEN stand.value_boolean = 1 AND vip.value_boolean = 1 THEN 1 ELSE 0 END)
+          AS standAndVip
+      FROM participants p
+      LEFT JOIN touchpoint_definitions dem_open_def
+        ON dem_open_def.technical_name = 'dem_aperta'
+      LEFT JOIN participant_touchpoints dem_open
+        ON dem_open.participant_id = p.id
+       AND dem_open.touchpoint_id = dem_open_def.id
+      LEFT JOIN touchpoint_definitions stand_def
+        ON stand_def.technical_name = 'visita_stand'
+      LEFT JOIN participant_touchpoints stand
+        ON stand.participant_id = p.id
+       AND stand.touchpoint_id = stand_def.id
+      LEFT JOIN touchpoint_definitions vip_def
+        ON vip_def.technical_name = 'accesso_sala_vip'
+      LEFT JOIN participant_touchpoints vip
+        ON vip.participant_id = p.id
+       AND vip.touchpoint_id = vip_def.id
+      LEFT JOIN touchpoint_definitions simposio_def
+        ON simposio_def.technical_name = 'presenza_simposio'
+      LEFT JOIN participant_touchpoints simposio
+        ON simposio.participant_id = p.id
+       AND simposio.touchpoint_id = simposio_def.id
+      ${filters.whereSql}
+    `);
+
+    const result = query.get(filters.params);
+    const conversionRate = (numerator, denominator) =>
+      denominator > 0 ? Number(((numerator / denominator) * 100).toFixed(1)) : 0;
+
+    response.json([
+      {
+        label: "DEM aperta verso visita stand",
+        from: result.demOpened,
+        to: result.demOpenedAndStandVisit,
+        rate: conversionRate(result.demOpenedAndStandVisit, result.demOpened),
+      },
+      {
+        label: "Visita stand verso accesso sala VIP",
+        from: result.standVisits,
+        to: result.standAndVip,
+        rate: conversionRate(result.standAndVip, result.standVisits),
+      },
+      {
+        label: "Accesso sala VIP verso presenza simposio",
+        from: result.vipAccesses,
+        to: result.vipAndSymposium,
+        rate: conversionRate(result.vipAndSymposium, result.vipAccesses),
+      },
+      {
+        label: "Presenza simposio su totale partecipanti",
+        from: result.participants,
+        to: result.symposiumAttendances,
+        rate: conversionRate(result.symposiumAttendances, result.participants),
+      },
+    ]);
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
  * Confronto per dimensione anagrafica.
  *
  * Accetto solo dimensioni previste per evitare SQL dinamico non controllato.

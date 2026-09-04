@@ -178,6 +178,7 @@ GET /api/health
 GET /api/participants
 GET /api/analytics/summary
 GET /api/analytics/funnel
+GET /api/analytics/relationships
 GET /api/analytics/by-dimension
 GET /api/analytics/by-day
 ```
@@ -190,12 +191,13 @@ Gli endpoint analytics restituiscono dati gia' pronti per i grafici della dashbo
 
 La dashboard contiene due sezioni:
 
-- `Dashboard`: KPI principali, funnel del percorso, confronto per dimensione e andamento giornaliero;
+- `Dashboard`: KPI principali, funnel del percorso, relazioni tra azioni, confronto per dimensione e andamento giornaliero;
 - `Partecipanti`: tabella filtrabile e paginata.
 
 Le viste richieste dalla consegna sono presenti:
 
 - funnel dalle persone raggiunte fino alle azioni piu' impegnative;
+- relazioni tra azioni, ad esempio DEM aperta verso visita stand e sala VIP verso simposio;
 - confronto per dimensione anagrafica, selezionabile tra canale, stakeholder e regione;
 - andamento per giornata del congresso.
 
@@ -219,6 +221,8 @@ Per esempio, `permanenza_min` e `focus_rate` restano vuoti se la persona non era
 Il lavoro rende visibili soprattutto tre aspetti:
 
 - quante persone passano dalla comunicazione DEM alle interazioni piu' impegnative;
+- quante persone che aprono la DEM arrivano poi alla visita dello stand;
+- quante persone che accedono alla sala VIP risultano presenti anche al simposio;
 - quali canali di ingaggio portano partecipanti piu' attivi;
 - come cambiano visite, accessi e presenze nelle diverse giornate del congresso.
 
@@ -239,6 +243,7 @@ Ho verificato:
 - endpoint `/api/health`;
 - endpoint partecipanti con filtri e paginazione;
 - endpoint analytics;
+- endpoint relazioni tra touchpoint;
 - build frontend React;
 - avvio rapido con `npm run import` e `npm run dev`.
 

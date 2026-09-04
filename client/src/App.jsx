@@ -59,6 +59,7 @@ function App() {
   const [dashboardData, setDashboardData] = useState({
     summary: null,
     funnel: [],
+    relationships: [],
     byDimension: [],
     byDay: [],
   });
@@ -92,9 +93,10 @@ function App() {
       setError("");
 
       try {
-        const [summary, funnel, byDimension, byDay, participantsResult] = await Promise.all([
+        const [summary, funnel, relationships, byDimension, byDay, participantsResult] = await Promise.all([
           api.getSummary(filters),
           api.getFunnel(filters),
+          api.getRelationships(filters),
           api.getByDimension(dimension, filters),
           api.getByDay(filters),
           api.getParticipants(participantParams),
@@ -104,6 +106,7 @@ function App() {
           setDashboardData({
             summary,
             funnel,
+            relationships,
             byDimension,
             byDay,
           });
@@ -285,6 +288,22 @@ function App() {
               </ResponsiveContainer>
             </Panel>
 
+            <Panel title="Relazioni tra azioni" isLoading={isLoading}>
+              <div className="relationship-list">
+                {dashboardData.relationships.map((relationship) => (
+                  <article className="relationship-item" key={relationship.label}>
+                    <div>
+                      <h3>{relationship.label}</h3>
+                      <p>
+                        {formatNumber(relationship.to)} su {formatNumber(relationship.from)}
+                      </p>
+                    </div>
+                    <strong>{relationship.rate.toFixed(1).replace(".", ",")}%</strong>
+                  </article>
+                ))}
+              </div>
+            </Panel>
+
             <Panel title="Confronto per dimensione" isLoading={isLoading}>
               <div className="panel-control">
                 <label>
@@ -355,6 +374,9 @@ function App() {
         />
       ) : null}
 
+      <footer className="page-footer">
+        Progetto realizzato da Blanna Fabio - 4 settembre 2026
+      </footer>
     </main>
   );
 }
@@ -381,7 +403,7 @@ function ParticipantsPanel({ isLoading, participants, search, onSearchChange, on
             type="search"
             value={search}
             onChange={onSearchChange}
-            placeholder="Nome, azienda, email"
+            placeholder="Nome o email"
           />
         </label>
         <p>
@@ -396,7 +418,6 @@ function ParticipantsPanel({ isLoading, participants, search, onSearchChange, on
             <thead>
               <tr>
                 <th>Partecipante</th>
-                <th>Azienda</th>
                 <th>Stakeholder</th>
                 <th>Regione</th>
                 <th>Canale</th>
@@ -409,7 +430,6 @@ function ParticipantsPanel({ isLoading, participants, search, onSearchChange, on
                     <strong>{participant.fullName || "Non indicato"}</strong>
                     <span>{participant.email || "Email non indicata"}</span>
                   </td>
-                  <td>{participant.company || "Non indicata"}</td>
                   <td>{participant.stakeholderType || "Non indicato"}</td>
                   <td>{participant.region || "Non indicata"}</td>
                   <td>{participant.engagementChannel || "Non indicato"}</td>
