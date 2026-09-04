@@ -431,6 +431,9 @@ function ParticipantsPanel({ isLoading, participants, search, onSearchChange, on
         >
           Precedente
         </button>
+        <span className="page-indicator">
+          Pagina {participants.pagination.page} di {participants.pagination.totalPages}
+        </span>
         <button
           className="secondary-button"
           type="button"
