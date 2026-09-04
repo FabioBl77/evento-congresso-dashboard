@@ -1,6 +1,6 @@
 # Dashboard Evento Congresso 2025
 
-Questo progetto e' il mio elaborato tecnico per la prova Full Stack Developer / Business Software Developer.
+Questo progetto e' un elaborato tecnico Full Stack Developer / Business Software Developer.
 
 Ho realizzato una dashboard web che importa i dati di un congresso medico da un file Excel, li salva in SQLite, li espone tramite API REST e li visualizza con React.
 
@@ -16,6 +16,8 @@ L'obiettivo non e' riportare il foglio Excel a schermo, ma trasformarlo in un mo
 - Avvio: Node.js oppure Docker Compose
 
 Ho scelto SQLite per avere un database reale e persistente senza richiedere l'installazione di un server esterno. Per una prova tecnica di queste dimensioni mi permette di concentrarmi su modello dati, import, query e aggregazioni.
+
+Ho scartato PostgreSQL o MySQL per non introdurre una dipendenza infrastrutturale non necessaria in una prova da consegnare e avviare velocemente su una macchina pulita.
 
 Ho scelto React con Vite per separare frontend e backend mantenendo un setup leggero. In alternativa avrei potuto usare HTML, CSS e JavaScript puro, ma React rende piu' chiara la gestione di stato, filtri, caricamento dati e viste della dashboard.
 
@@ -218,13 +220,11 @@ Per esempio, `permanenza_min` e `focus_rate` restano vuoti se la persona non era
 
 ## Osservazioni rese visibili
 
-Il lavoro rende visibili soprattutto tre aspetti:
+Il lavoro rende visibili tre aspetti principali:
 
-- quante persone passano dalla comunicazione DEM alle interazioni piu' impegnative;
-- quante persone che aprono la DEM arrivano poi alla visita dello stand;
-- quante persone che accedono alla sala VIP risultano presenti anche al simposio;
-- quali canali di ingaggio portano partecipanti piu' attivi;
-- come cambiano visite, accessi e presenze nelle diverse giornate del congresso.
+- la relazione tra comunicazione DEM e comportamenti successivi, ad esempio quante persone che aprono la DEM arrivano poi alla visita dello stand;
+- il livello di coinvolgimento dopo l'accesso alla sala VIP, verificando quante persone risultano presenti anche al simposio;
+- le differenze di partecipazione per canale, stakeholder, regione e giornata del congresso.
 
 Queste osservazioni nascono dall'incrocio tra anagrafica, canale di ingaggio, giornata e touchpoint.
 
@@ -245,7 +245,8 @@ Ho verificato:
 - endpoint analytics;
 - endpoint relazioni tra touchpoint;
 - build frontend React;
-- avvio rapido con `npm run import` e `npm run dev`.
+- avvio rapido con `npm run import` e `npm run dev`;
+- avvio con `docker compose up --build`.
 
 Risultati principali dopo l'import:
 
