@@ -356,11 +356,18 @@ function App() {
                 <BarChart
                   data={dashboardData.byDimension.map((item) => ({
                     ...item,
-                    name: normalizeChartName(item.name),
+                    name: normalizeChartName(item.label),
                   }))}
                 >
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="name" tick={{ fontSize: 11 }} interval={0} height={70} />
+                  <XAxis
+                    dataKey="name"
+                    tick={{ fontSize: 11 }}
+                    interval={0}
+                    height={90}
+                    angle={-20}
+                    textAnchor="end"
+                  />
                   <YAxis allowDecimals={false} />
                   <Tooltip formatter={(value) => formatNumber(value)} />
                   <Bar dataKey="participants" name="Partecipanti" fill="#466060" radius={[4, 4, 0, 0]} />
