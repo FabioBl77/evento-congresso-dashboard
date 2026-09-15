@@ -3,10 +3,6 @@ import { getDatabase } from "../database.js";
 
 const router = Router();
 
-/**
- * Costanti per la paginazione. Le uso per evitare che il browser richieda
- * pagine troppo grandi e che il server debba caricare tutto il dataset in memoria.
- */
 const DEFAULT_PAGE = 1;
 const DEFAULT_PAGE_SIZE = 25;
 const MAX_PAGE_SIZE = 100;
@@ -21,10 +17,6 @@ const parsePositiveInteger = (value, fallback) => {
   return parsed;
 };
 
-/**
- * Normalizza un filtro rimuovendo spazi bianchi e convertendo stringhe vuote in null.
- * In questo modo posso distinguere tra filtri non specificati e filtri vuoti.
- */
 const normalizeFilter = (value) => {
   if (typeof value !== "string") {
     return null;
@@ -34,11 +26,6 @@ const normalizeFilter = (value) => {
   return normalized.length > 0 ? normalized : null;
 };
 
-/**
- * Costruisce la clausola WHERE e i parametri per la query SQL in base ai filtri forniti.
- * I filtri supportati sono: stakeholderType, region, engagementChannel e search.
- * La ricerca viene effettuata su full_name e email.
- */
 const buildParticipantsWhere = (query) => {
   const conditions = [];
   const params = {};
@@ -74,10 +61,6 @@ const buildParticipantsWhere = (query) => {
   };
 };
 
-/**
- * Restituisce i valori distinti di una colonna della tabella participants.
- * Li uso per popolare le select dei filtri della dashboard. 
- */
 const getDistinctValues = (db, columnName) =>
   db
     .prepare(
