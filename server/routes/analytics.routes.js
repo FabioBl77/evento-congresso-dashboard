@@ -12,6 +12,9 @@ const normalizeFilter = (value) => {
   return normalized.length > 0 ? normalized : null;
 };
 
+/**
+  * Costruisce la clausola WHERE e i parametri per la query SQL in base ai filtri forniti.
+ */
 const buildParticipantFilters = (query) => {
   const conditions = [];
   const params = {};
@@ -41,6 +44,11 @@ const buildParticipantFilters = (query) => {
   };
 };
 
+/**
+ * Conta i partecipanti che hanno completato un touchpoint booleano specifico.
+ *
+ * Conta quanti partecipanti hanno aperto la DEM.
+ */
 const countBooleanTouchpoint = (db, technicalName, filters) => {
   const touchpointId = getTouchpointId(technicalName);
 

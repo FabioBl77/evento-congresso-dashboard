@@ -1,3 +1,4 @@
+// useState: gestisce lo stato della pagina, useEffect: esegue chiamate API quando cambia qualcosa,useMemo: evita di ricreare parametri inutilmente
 import { useEffect, useMemo, useState } from "react";
 import {
   Bar,
@@ -12,24 +13,28 @@ import {
 } from "recharts";
 import { api } from "./api.js";
 
+// Stato iniziale dei filtri globali applicati a dashboard e tabella partecipanti.
 const emptyFilters = {
   stakeholderType: "",
   region: "",
   engagementChannel: "",
 };
 
+// Opzioni delle select: vengono popolate dal backend leggendo i valori reali del database.
 const emptyFilterOptions = {
   stakeholderTypes: [],
   regions: [],
   engagementChannels: [],
 };
 
+// Dimensioni disponibili per il grafico di confronto.
 const dimensionOptions = [
   { value: "engagementChannel", label: "Canale di ingaggio" },
   { value: "stakeholderType", label: "Tipologia stakeholder" },
   { value: "region", label: "Regione" },
 ];
 
+// Sezioni principali mostrate nella navigazione interna.
 const navItems = [
   { id: "dashboard", label: "Dashboard" },
   { id: "participants", label: "Partecipanti" },
@@ -37,6 +42,7 @@ const navItems = [
 
 const numberFormatter = new Intl.NumberFormat("it-IT");
 
+// Helper di formattazione usati da KPI, tooltip e tabella.
 const formatNumber = (value) => numberFormatter.format(value || 0);
 
 const formatPercentage = (value, total) => {
@@ -50,12 +56,15 @@ const formatPercentage = (value, total) => {
 const normalizeChartName = (value) => value || "Non indicato";
 
 function App() {
+  // Stato principale dell'interfaccia: navigazione, filtri, ricerca e pagina corrente.
   const [activeSection, setActiveSection] = useState("dashboard");
   const [filters, setFilters] = useState(emptyFilters);
   const [dimension, setDimension] = useState("engagementChannel");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [filterOptions, setFilterOptions] = useState(emptyFilterOptions);
+
+  // Dati aggregati restituiti dagli endpoint analytics.
   const [dashboardData, setDashboardData] = useState({
     summary: null,
     funnel: [],
@@ -63,18 +72,21 @@ function App() {
     byDimension: [],
     byDay: [],
   });
+
+  // Dati della tabella partecipanti, comprensivi di paginazione.
   const [participants, setParticipants] = useState({
     data: [],
     pagination: {
       page: 1,
       pageSize: 10,
-      totalItems: 0,
+      total: 0,
       totalPages: 1,
     },
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // Parametri usati dalla chiamata alla lista partecipanti.
   const participantParams = useMemo(
     () => ({
       ...filters,
@@ -85,6 +97,7 @@ function App() {
     [filters, page, search],
   );
 
+  // Carica una sola volta le opzioni dei filtri dal database tramite backend.
   useEffect(() => {
     let ignoreResult = false;
 
@@ -109,6 +122,7 @@ function App() {
     };
   }, []);
 
+  // Ricarica dashboard e tabella quando cambiano filtri, dimensione, ricerca o pagina.
   useEffect(() => {
     let ignoreResult = false;
 
@@ -157,6 +171,7 @@ function App() {
   const selectedDimensionLabel =
     dimensionOptions.find((option) => option.value === dimension)?.label || "";
 
+  // Ogni cambio filtro riporta la tabella partecipanti alla prima pagina.
   const handleFilterChange = (field, value) => {
     setFilters((currentFilters) => ({
       ...currentFilters,
@@ -165,11 +180,13 @@ function App() {
     setPage(1);
   };
 
+  // La ricerca lavora insieme ai filtri globali e resetta la paginazione.
   const handleSearchChange = (event) => {
     setSearch(event.target.value);
     setPage(1);
   };
 
+  // Ripristina lo stato iniziale dei filtri e della ricerca.
   const resetFilters = () => {
     setFilters(emptyFilters);
     setSearch("");
@@ -188,6 +205,7 @@ function App() {
         </button>
       </header>
 
+      {/* Navigazione tra vista aggregata e dettaglio partecipanti. */}
       <nav className="main-nav" aria-label="Sezioni dashboard">
         {navItems.map((item) => (
           <button
@@ -201,6 +219,7 @@ function App() {
         ))}
       </nav>
 
+      {/* Filtri globali: influenzano sia i grafici sia la tabella partecipanti. */}
       <section className="toolbar" aria-label="Filtri dashboard">
         <label>
           Stakeholder
@@ -250,6 +269,7 @@ function App() {
 
       {error ? <div className="error-box">{error}</div> : null}
 
+      {/* Sezione dashboard: KPI, funnel, relazioni, confronto e andamento giornaliero. */}
       {activeSection === "dashboard" ? (
         <>
           <section className="kpi-grid" aria-label="Indicatori principali">
@@ -300,6 +320,7 @@ function App() {
             />
           </section>
 
+          {/* Messaggio mostrato quando i filtri non producono nessun partecipante. */}
           {!isLoading && dashboardData.summary?.participants === 0 ? (
             <div className="empty-box">Nessun risultato per i filtri selezionati.</div>
           ) : null}
@@ -351,7 +372,7 @@ function App() {
                   </select>
                 </label>
               </div>
-
+          {/* Qui è dove avevo commesso l'errore ho sostituito item.name con item.label */}
               <ResponsiveContainer width="100%" height={280}>
                 <BarChart
                   data={dashboardData.byDimension.map((item) => ({
@@ -405,6 +426,7 @@ function App() {
         </>
       ) : null}
 
+      {/* Sezione di dettaglio: lista paginata dei partecipanti filtrati. */}
       {activeSection === "participants" ? (
         <ParticipantsPanel
           isLoading={isLoading}
@@ -422,6 +444,7 @@ function App() {
   );
 }
 
+// Card riusabile per mostrare i KPI principali della dashboard.
 function KpiCard({ label, value, detail }) {
   return (
     <article className="kpi-card">
@@ -432,6 +455,7 @@ function KpiCard({ label, value, detail }) {
   );
 }
 
+// Tabella partecipanti con ricerca testuale e paginazione lato backend.
 function ParticipantsPanel({ isLoading, participants, search, onSearchChange, onPageChange }) {
   const hasParticipants = participants.data.length > 0;
 
@@ -448,7 +472,7 @@ function ParticipantsPanel({ isLoading, participants, search, onSearchChange, on
           />
         </label>
         <p>
-          {formatNumber(participants.pagination.totalItems)} risultati, pagina{" "}
+          {formatNumber(participants.pagination.total)} risultati, pagina{" "}
           {participants.pagination.page} di {participants.pagination.totalPages}
         </p>
       </div>
@@ -512,6 +536,7 @@ function ParticipantsPanel({ isLoading, participants, search, onSearchChange, on
   );
 }
 
+// Contenitore comune per i pannelli della dashboard e della tabella.
 function Panel({ title, children, isLoading, wide = false }) {
   return (
     <section className={wide ? "panel panel-wide" : "panel"}>
